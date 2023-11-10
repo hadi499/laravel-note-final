@@ -13,10 +13,17 @@ class NoteController extends Controller
     public function index()
     {
         $categories = Category::where('user_id', auth()->user()->id)->get();
-        $notes = Note::where('user_id', auth()->user()->id)->get();
+        // untuk eager loading, jangan ditaruh di model nanti error
+        $notes = Note::where('user_id', auth()->user()->id)->with(['user', 'category'])->latest();
+
+        if (request('search')) {
+            $notes->where('title', 'like', '%' . request('search') . '%')
+                ->orWhere('body', 'like', '%' . request('search') . '%');
+        }
+
         return view('notes.index', [
             'categories' => $categories,
-            'notes' => $notes,
+            'notes' => $notes->get(),
             'active' => 'notes'
         ]);
     }
